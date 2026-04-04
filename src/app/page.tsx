@@ -16,6 +16,7 @@ import { ListeningQuiz } from "@/components/ListeningQuiz";
 import type { VerbConjugation } from "@/types";
 import { initVoices } from "@/lib/speech";
 import { useProgress } from "@/hooks/useProgress";
+import { WelcomeModal } from "@/components/WelcomeModal";
 
 const BUILD_VERSION = process.env.BUILD_VERSION || "dev";
 
@@ -29,6 +30,7 @@ export default function Home() {
   const [listeningQuizOpen, setListeningQuizOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [wordModalOpen, setWordModalOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(true);
 
   useEffect(() => {
     initVoices();
@@ -75,18 +77,18 @@ export default function Home() {
     <div className="flex h-screen bg-[#1a2a6c]">
       {/* ===== LEFT SIDEBAR (desktop only) ===== */}
       <aside className="hidden lg:flex flex-col items-center w-72 bg-gradient-to-b from-[#1a2a6c] to-[#2d3a8c] p-5 pt-4 gap-5 overflow-y-auto">
-        <div className="flex items-center gap-2 w-full mb-1">
+        <button type="button" onClick={() => setWelcomeOpen(true)} className="flex items-center gap-2 w-full mb-1 hover:opacity-80 transition-opacity">
           <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
               <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
           </div>
-          <div>
+          <div className="text-left">
             <p className="text-sm font-bold text-white tracking-wide">ROHU</p>
             <p className="text-[10px] text-[#00b894] font-semibold -mt-0.5">Learn English</p>
           </div>
-        </div>
+        </button>
 
         <Avatar state={effectiveAvatarState} />
 
@@ -122,15 +124,16 @@ export default function Home() {
         {/* Mobile header */}
         <header className="lg:hidden flex items-center justify-between px-3 py-2.5 bg-[#1a2a6c] border-b border-white/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setWelcomeOpen(true)} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#00b894] flex-shrink-0">
               <img src="/avatar-tutor.png" alt="Tutor" className="w-full h-full object-cover" />
             </div>
-            <div>
+            <div className="text-left">
               <p className="text-xs font-bold text-white">ROHU</p>
               <p className="text-[10px] text-[#00b894]">Learn English</p>
             </div>
-          </div>
+          </button>
           <div className="flex items-center gap-2">
             {progress.streak > 0 && <span className="text-xs text-white">🔥{progress.streak}</span>}
             <span className="text-[10px] bg-white/10 rounded-full px-2 py-0.5 text-white font-bold">
@@ -149,7 +152,7 @@ export default function Home() {
         </header>
 
         {/* Chat area */}
-        <div className="flex-1 flex flex-col bg-white dark:bg-zinc-900 overflow-hidden rounded-tl-2xl lg:rounded-tl-none">
+        <div className="flex-1 flex flex-col bg-white dark:bg-zinc-900 overflow-hidden lg:rounded-tl-2xl">
           <ChatWindow messages={messages} onWordClick={handleWordClick} />
 
           {error && (
@@ -274,6 +277,9 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Welcome Modal */}
+      <WelcomeModal isOpen={welcomeOpen} onClose={() => setWelcomeOpen(false)} />
 
       {/* Quiz Modals */}
       <VocabQuiz isOpen={quizOpen} onClose={() => setQuizOpen(false)} onComplete={(xp) => progress.addXp(xp, "quiz")} />
