@@ -134,15 +134,25 @@ export default function Home() {
               <p className="text-[10px] text-[#00b894]">Learn English</p>
             </div>
           </button>
-          <div className="flex items-center gap-2">
-            {progress.streak > 0 && <span className="text-xs text-white">🔥{progress.streak}</span>}
-            <span className="text-[10px] bg-white/10 rounded-full px-2 py-0.5 text-white font-bold">
-              {progress.level.emoji} {progress.todayXp}XP
+          <div className="flex items-center gap-1.5">
+            {progress.streak > 0 && <span className="text-[10px] text-white">🔥{progress.streak}</span>}
+            <span className="text-[9px] bg-white/10 rounded-full px-1.5 py-0.5 text-white font-bold">
+              {progress.level.emoji}{progress.todayXp}
             </span>
-            {/* Hamburger button */}
+            {/* Quick quiz */}
+            <button type="button" onClick={() => setQuizOpen(true)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#00b894] text-white text-sm active:scale-90">
+              🎯
+            </button>
+            {/* Quick listening */}
+            <button type="button" onClick={() => setListeningQuizOpen(true)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#6c5ce7] text-white text-sm active:scale-90">
+              🎧
+            </button>
+            {/* Menu */}
             <button type="button" onClick={() => setMenuOpen(true)}
               className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-white">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <line x1="3" y1="12" x2="21" y2="12" />
                 <line x1="3" y1="18" x2="21" y2="18" />
@@ -278,8 +288,19 @@ export default function Home() {
         </div>
       )}
 
-      {/* Welcome Modal */}
-      <WelcomeModal isOpen={welcomeOpen} onClose={() => setWelcomeOpen(false)} />
+      {/* Welcome / Menu Modal */}
+      <WelcomeModal
+        isOpen={welcomeOpen}
+        onClose={() => setWelcomeOpen(false)}
+        onQuiz={() => { setWelcomeOpen(false); setQuizOpen(true); }}
+        onListening={() => { setWelcomeOpen(false); setListeningQuizOpen(true); }}
+        onSearch={(w) => { setWelcomeOpen(false); handleWordClick(w); }}
+        onLogout={logout}
+        level={progress.level}
+        todayXp={progress.todayXp}
+        streak={progress.streak}
+        version={BUILD_VERSION}
+      />
 
       {/* Quiz Modals */}
       <VocabQuiz isOpen={quizOpen} onClose={() => setQuizOpen(false)} onComplete={(xp) => progress.addXp(xp, "quiz")} />
