@@ -17,12 +17,12 @@ export function ChatWindow({ messages, onWordClick }: ChatWindowProps) {
   }, [messages]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+    <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0">
       {messages.length === 0 && (
-        <div className="flex flex-col items-center justify-center h-full text-center text-zinc-400 dark:text-zinc-500 gap-2">
-          <p className="text-lg font-medium">Hello! Ready to practice English?</p>
-          <p className="text-sm">Type a message or tap the mic to start talking.</p>
-          <p className="text-xs mt-2 text-zinc-300 dark:text-zinc-600">Click any word in my responses to see its definition</p>
+        <div className="flex flex-col items-center justify-center h-full text-center text-zinc-400 dark:text-zinc-500 gap-1.5 px-4">
+          <p className="text-base sm:text-lg font-medium">Hello! Ready to practice?</p>
+          <p className="text-xs sm:text-sm">Type a message or tap the mic 🎤</p>
+          <p className="text-[10px] sm:text-xs mt-1 text-zinc-300 dark:text-zinc-600">Tap any word to see its definition</p>
         </div>
       )}
       {messages.map((msg) => (

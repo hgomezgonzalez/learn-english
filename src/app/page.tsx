@@ -74,7 +74,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen bg-[#1a2a6c]">
+    <div className="flex h-[100dvh] bg-[#1a2a6c]">
       {/* ===== LEFT SIDEBAR (desktop only) ===== */}
       <aside className="hidden lg:flex flex-col items-center w-72 bg-gradient-to-b from-[#1a2a6c] to-[#2d3a8c] p-5 pt-4 gap-5 overflow-y-auto">
         <button type="button" onClick={() => setWelcomeOpen(true)} className="flex items-center gap-2 w-full mb-1 hover:opacity-80 transition-opacity">
