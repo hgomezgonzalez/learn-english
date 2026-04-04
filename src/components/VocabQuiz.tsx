@@ -51,6 +51,7 @@ export function VocabQuiz({ isOpen, onClose, onComplete }: VocabQuizProps) {
   const [isCorrect, setIsCorrect] = useState(false);
   const [loading, setLoading] = useState(false);
   const [quizError, setQuizError] = useState<string | null>(null);
+  const [usedWords, setUsedWords] = useState<string[]>([]);
   const [isListening, setIsListening] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<unknown>(null);
@@ -82,13 +83,15 @@ export function VocabQuiz({ isOpen, onClose, onComplete }: VocabQuizProps) {
       const res = await fetch("/api/quiz", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ difficulty }),
+        body: JSON.stringify({ difficulty, usedWords }),
       });
       const data = await res.json();
       if (data.error) {
         setQuizError(data.error);
       } else if (data.questions?.length) {
         setQuestions(data.questions);
+        const newWords = data.questions.map((q: QuizQuestion) => q.answer);
+        setUsedWords((prev) => [...prev, ...newWords]);
         setPhase("playing");
       } else {
         setQuizError("No questions generated. Try again.");
@@ -182,8 +185,8 @@ export function VocabQuiz({ isOpen, onClose, onComplete }: VocabQuizProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-[fadeIn_0.2s_ease-out]">
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-[slideUp_0.3s_ease-out]">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 animate-[fadeIn_0.2s_ease-out]">
+      <div className="bg-white dark:bg-zinc-900 sm:rounded-2xl rounded-t-2xl shadow-2xl w-full sm:max-w-lg sm:mx-4 max-h-[95vh] overflow-y-auto animate-[slideUp_0.3s_ease-out]">
         {/* Progress bar */}
         {phase !== "intro" && phase !== "summary" && (
           <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800">
@@ -216,8 +219,8 @@ export function VocabQuiz({ isOpen, onClose, onComplete }: VocabQuizProps) {
 
         {/* INTRO */}
         {phase === "intro" && (
-          <div className="p-8 text-center space-y-6">
-            <div className="text-6xl">🎯</div>
+          <div className="p-5 sm:p-8 text-center space-y-6">
+            <div className="text-4xl sm:text-6xl">🎯</div>
             <div>
               <h3 className="text-xl font-bold text-zinc-900 dark:text-white">Ready to test your vocabulary?</h3>
               <p className="text-sm text-zinc-500 mt-2">10 questions — type or speak your answer!</p>
@@ -262,7 +265,7 @@ export function VocabQuiz({ isOpen, onClose, onComplete }: VocabQuizProps) {
 
         {/* PLAYING */}
         {phase === "playing" && currentQ && (
-          <div className="p-8 text-center space-y-5">
+          <div className="p-5 sm:p-8 text-center space-y-5">
             <p className="text-xs text-zinc-400 font-medium">
               Question {currentIdx + 1} / {questions.length}
               {currentQ.type === "conjugation" && " • Conjugation"}
@@ -270,7 +273,7 @@ export function VocabQuiz({ isOpen, onClose, onComplete }: VocabQuizProps) {
 
             {currentQ.type === "vocab" ? (
               <>
-                <div className="text-7xl py-2">{currentQ.emoji || "❓"}</div>
+                <div className="text-5xl sm:text-7xl py-2">{currentQ.emoji || "❓"}</div>
                 <p className="text-base text-zinc-700 dark:text-zinc-300 font-medium">{currentQ.hint}</p>
                 <div className="flex justify-center">
                   <SpeakButton text={currentQ.hint} label="Listen to hint" isSentence />
@@ -338,7 +341,7 @@ export function VocabQuiz({ isOpen, onClose, onComplete }: VocabQuizProps) {
 
         {/* FEEDBACK */}
         {phase === "feedback" && currentQ && (
-          <div className="p-8 text-center space-y-5">
+          <div className="p-5 sm:p-8 text-center space-y-5">
             <div className={`text-6xl ${isCorrect ? "animate-bounce" : "animate-[shake_0.5s_ease-in-out]"}`}>
               {isCorrect ? "🎉" : "😅"}
             </div>
@@ -379,7 +382,7 @@ export function VocabQuiz({ isOpen, onClose, onComplete }: VocabQuizProps) {
 
         {/* SUMMARY */}
         {phase === "summary" && (
-          <div className="p-8 text-center space-y-5">
+          <div className="p-5 sm:p-8 text-center space-y-5">
             {correct / questions.length >= 0.7 && (
               <div className="text-5xl animate-bounce">🏆</div>
             )}

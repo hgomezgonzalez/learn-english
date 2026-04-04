@@ -4,7 +4,8 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: Request) {
   try {
-    const { difficulty } = await req.json();
+    const { difficulty, usedWords } = await req.json();
+    const excludeList = (usedWords || []).join(", ");
 
     const guides: Record<string, string> = {
       easy: "basic everyday words (cat, house, water, happy, run). Use common A1-A2 vocabulary.",
@@ -32,7 +33,7 @@ Return ONLY the JSON array, no extra text.`,
         },
         {
           role: "user",
-          content: `Generate 10 NEW and UNIQUE quiz questions (${difficulty || "easy"} difficulty). Random seed: ${Date.now()}-${Math.random().toString(36).slice(2)}. Do NOT repeat common words like cat, dog, house. Be creative and varied:`,
+          content: `Generate 10 NEW and UNIQUE quiz questions (${difficulty || "easy"} difficulty). Random seed: ${Date.now()}-${Math.random().toString(36).slice(2)}. ABSOLUTELY DO NOT use any of these words: ${excludeList || "none"}. Pick completely different, creative words each time:`,
         },
       ],
       temperature: 1.0,

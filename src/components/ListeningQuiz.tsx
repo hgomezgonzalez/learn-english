@@ -31,6 +31,7 @@ export function ListeningQuiz({ isOpen, onClose, onComplete }: ListeningQuizProp
   const [loading, setLoading] = useState(false);
   const [quizError, setQuizError] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const [usedWords, setUsedWords] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const currentWord = words[currentIdx];
@@ -65,13 +66,15 @@ export function ListeningQuiz({ isOpen, onClose, onComplete }: ListeningQuizProp
       const res = await fetch("/api/listening-quiz", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ difficulty }),
+        body: JSON.stringify({ difficulty, usedWords }),
       });
       const data = await res.json();
       if (data.error) {
         setQuizError(data.error);
       } else if (data.words?.length) {
         setWords(data.words);
+        const newWords = data.words.map((w: QuizWord) => w.word);
+        setUsedWords((prev) => [...prev, ...newWords]);
         setPhase("playing");
       } else {
         setQuizError("No words generated. Try again.");
@@ -127,8 +130,8 @@ export function ListeningQuiz({ isOpen, onClose, onComplete }: ListeningQuizProp
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-[fadeIn_0.2s_ease-out]">
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-[slideUp_0.3s_ease-out]">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 animate-[fadeIn_0.2s_ease-out]">
+      <div className="bg-white dark:bg-zinc-900 sm:rounded-2xl rounded-t-2xl shadow-2xl w-full sm:max-w-lg sm:mx-4 max-h-[95vh] overflow-y-auto animate-[slideUp_0.3s_ease-out]">
         {/* Progress bar */}
         {phase !== "intro" && phase !== "summary" && (
           <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800">
@@ -157,8 +160,8 @@ export function ListeningQuiz({ isOpen, onClose, onComplete }: ListeningQuizProp
 
         {/* INTRO */}
         {phase === "intro" && (
-          <div className="p-8 text-center space-y-6">
-            <div className="text-6xl">🎧</div>
+          <div className="p-5 sm:p-8 text-center space-y-6">
+            <div className="text-4xl sm:text-6xl">🎧</div>
             <div>
               <h3 className="text-xl font-bold text-zinc-900 dark:text-white">Listen & Write</h3>
               <p className="text-sm text-zinc-500 mt-2">Listen to the word and type what you hear!</p>
@@ -195,18 +198,18 @@ export function ListeningQuiz({ isOpen, onClose, onComplete }: ListeningQuizProp
 
         {/* PLAYING */}
         {phase === "playing" && currentWord && (
-          <div className="p-8 text-center space-y-5">
+          <div className="p-5 sm:p-8 text-center space-y-5">
             <p className="text-xs text-zinc-400 font-medium">
               Word {currentIdx + 1} / {words.length}
             </p>
 
             {/* Emoji */}
-            <div className="text-7xl py-2">{currentWord.emoji}</div>
+            <div className="text-5xl sm:text-7xl py-2">{currentWord.emoji}</div>
 
             {/* Big play button */}
             <button type="button" onClick={repeatWord}
-              className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] text-white flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transition-all">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] text-white flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transition-all">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
                 <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
@@ -228,7 +231,7 @@ export function ListeningQuiz({ isOpen, onClose, onComplete }: ListeningQuizProp
 
         {/* FEEDBACK */}
         {phase === "feedback" && currentWord && (
-          <div className="p-8 text-center space-y-5">
+          <div className="p-5 sm:p-8 text-center space-y-5">
             <div className={`text-6xl ${isCorrect ? "animate-bounce" : "animate-[shake_0.5s_ease-in-out]"}`}>
               {isCorrect ? "🎉" : "😅"}
             </div>
@@ -277,7 +280,7 @@ export function ListeningQuiz({ isOpen, onClose, onComplete }: ListeningQuizProp
 
         {/* SUMMARY */}
         {phase === "summary" && (
-          <div className="p-8 text-center space-y-5">
+          <div className="p-5 sm:p-8 text-center space-y-5">
             <div className="text-5xl">
               {correct / words.length >= 0.9 ? "🏆" : correct / words.length >= 0.7 ? "💪" : correct / words.length >= 0.5 ? "📚" : "💡"}
             </div>
