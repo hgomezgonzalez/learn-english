@@ -17,7 +17,7 @@ import type { VerbConjugation } from "@/types";
 import { initVoices } from "@/lib/speech";
 import { useProgress } from "@/hooks/useProgress";
 
-const BUILD_VERSION = "v1.0 — 2026-04-04 01:45";
+const BUILD_VERSION = process.env.BUILD_VERSION || "dev";
 
 export default function Home() {
   const { messages, isStreaming, avatarState, error, sendMessage } = useChat();

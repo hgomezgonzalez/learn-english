@@ -101,7 +101,7 @@ export default function LoginPage() {
             {loading ? "Ingresando..." : "Iniciar Sesión"}
           </button>
 
-          <p className="text-[10px] text-zinc-300 text-center mt-4">v1.0 — Build 2026-04-04 01:45</p>
+          <p className="text-[10px] text-zinc-300 text-center mt-4">{process.env.BUILD_VERSION || "dev"}</p>
         </form>
       </div>
     </div>
