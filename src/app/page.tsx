@@ -12,9 +12,12 @@ import { SuggestedPhrases } from "@/components/SuggestedPhrases";
 import { WordSearch } from "@/components/WordSearch";
 import { ScoreBoard } from "@/components/ScoreBoard";
 import { VocabQuiz } from "@/components/VocabQuiz";
+import { ListeningQuiz } from "@/components/ListeningQuiz";
 import type { VerbConjugation } from "@/types";
 import { initVoices } from "@/lib/speech";
 import { useProgress } from "@/hooks/useProgress";
+
+const BUILD_VERSION = "v1.0 — 2026-04-04 01:45";
 
 export default function Home() {
   const { messages, isStreaming, avatarState, error, sendMessage } = useChat();
@@ -23,16 +26,16 @@ export default function Home() {
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [wordConjugation, setWordConjugation] = useState<VerbConjugation | null>(null);
   const [quizOpen, setQuizOpen] = useState(false);
-  const [mobilePanel, setMobilePanel] = useState<"none" | "tools" | "definition">("none");
+  const [listeningQuizOpen, setListeningQuizOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [wordModalOpen, setWordModalOpen] = useState(false);
 
   useEffect(() => {
     initVoices();
   }, []);
 
   const handleTranscript = useCallback(
-    (text: string) => {
-      sendMessage(text);
-    },
+    (text: string) => sendMessage(text),
     [sendMessage]
   );
 
@@ -58,9 +61,15 @@ export default function Home() {
 
   const handleWordClick = useCallback((word: string) => {
     setSelectedWord(word);
-    setMobilePanel("definition");
+    setWordModalOpen(true);
+    setMenuOpen(false);
     progress.addXp(2, "word");
   }, [progress]);
+
+  const logout = async () => {
+    await fetch("/api/auth", { method: "DELETE" });
+    window.location.href = "/login";
+  };
 
   return (
     <div className="flex h-screen bg-[#1a2a6c]">
@@ -81,55 +90,37 @@ export default function Home() {
 
         <Avatar state={effectiveAvatarState} />
 
-        <button
-          type="button"
-          onClick={() => setQuizOpen(true)}
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-[#00b894] to-[#00a383] text-white font-bold text-sm hover:shadow-lg hover:shadow-[#00b894]/30 transition-all flex items-center justify-center gap-2"
-        >
-          <span className="text-lg">🎯</span>
-          Vocab Quiz
-        </button>
-
-        <div className="w-full">
-          <WordSearch onSearch={handleWordClick} />
+        <div className="w-full flex gap-2">
+          <button type="button" onClick={() => setQuizOpen(true)}
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#00b894] to-[#00a383] text-white font-bold text-xs hover:shadow-lg transition-all flex items-center justify-center gap-1">
+            🎯 Quiz
+          </button>
+          <button type="button" onClick={() => setListeningQuizOpen(true)}
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-bold text-xs hover:shadow-lg transition-all flex items-center justify-center gap-1">
+            🎧 Listening
+          </button>
         </div>
 
-        <ScoreBoard
-          totalXp={progress.totalXp}
-          todayXp={progress.todayXp}
-          streak={progress.streak}
-          level={progress.level}
-          nextLevel={progress.nextLevel}
-          levelProgress={progress.levelProgress}
-          todayMessages={progress.todayMessages}
-          todayQuizzes={progress.todayQuizzes}
-          todayWords={progress.todayWords}
-        />
+        <div className="w-full"><WordSearch onSearch={handleWordClick} /></div>
+
+        <ScoreBoard totalXp={progress.totalXp} todayXp={progress.todayXp} streak={progress.streak}
+          level={progress.level} nextLevel={progress.nextLevel} levelProgress={progress.levelProgress}
+          todayMessages={progress.todayMessages} todayQuizzes={progress.todayQuizzes} todayWords={progress.todayWords} />
 
         <div className="w-full">
-          <SuggestedPhrases
-            messages={messages}
-            onSelect={sendMessage}
-            disabled={isStreaming}
-          />
+          <SuggestedPhrases messages={messages} onSelect={sendMessage} disabled={isStreaming} />
         </div>
 
-        <button
-          type="button"
-          onClick={async () => {
-            await fetch("/api/auth", { method: "DELETE" });
-            window.location.href = "/login";
-          }}
-          className="w-full mt-auto py-2 text-xs text-white/30 hover:text-white/60 transition-colors"
-        >
+        <button type="button" onClick={logout} className="w-full mt-auto py-2 text-xs text-white/30 hover:text-white/60 transition-colors">
           Cerrar sesión
         </button>
+        <p className="text-[9px] text-white/20 text-center">{BUILD_VERSION}</p>
       </aside>
 
       {/* ===== CENTER — CHAT ===== */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
-        <header className="lg:hidden flex items-center justify-between px-3 py-2 bg-[#1a2a6c] border-b border-white/10">
+        <header className="lg:hidden flex items-center justify-between px-3 py-2.5 bg-[#1a2a6c] border-b border-white/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#00b894] flex-shrink-0">
@@ -140,13 +131,20 @@ export default function Home() {
               <p className="text-[10px] text-[#00b894]">Learn English</p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            {progress.streak > 0 && (
-              <span className="text-xs text-white">🔥{progress.streak}</span>
-            )}
+          <div className="flex items-center gap-2">
+            {progress.streak > 0 && <span className="text-xs text-white">🔥{progress.streak}</span>}
             <span className="text-[10px] bg-white/10 rounded-full px-2 py-0.5 text-white font-bold">
               {progress.level.emoji} {progress.todayXp}XP
             </span>
+            {/* Hamburger button */}
+            <button type="button" onClick={() => setMenuOpen(true)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-white">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
           </div>
         </header>
 
@@ -162,130 +160,129 @@ export default function Home() {
 
           <ConjugationPanel data={wordConjugation} />
 
-          {/* ===== MOBILE TOOLBAR ===== */}
-          <div className="lg:hidden flex items-center gap-1.5 px-3 py-2 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
-            <button
-              type="button"
-              onClick={() => setQuizOpen(true)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#00b894] text-white text-[11px] font-bold"
-            >
-              🎯 Quiz
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobilePanel(mobilePanel === "tools" ? "none" : "tools")}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors ${
-                mobilePanel === "tools"
-                  ? "bg-[#1a2a6c] text-white"
-                  : "bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
-              }`}
-            >
-              📊 Progress
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobilePanel(mobilePanel === "definition" ? "none" : "definition")}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors ${
-                mobilePanel === "definition"
-                  ? "bg-[#1a2a6c] text-white"
-                  : "bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
-              }`}
-            >
-              📖 {selectedWord || "Dictionary"}
-            </button>
-            <button
-              type="button"
-              onClick={async () => {
-                await fetch("/api/auth", { method: "DELETE" });
-                window.location.href = "/login";
-              }}
-              className="ml-auto px-2 py-1.5 rounded-full text-[11px] text-zinc-400"
-            >
-              Salir
-            </button>
-          </div>
-
-          {/* ===== MOBILE PANELS (slide up) ===== */}
-          {mobilePanel !== "none" && (
-            <div className="lg:hidden max-h-[50vh] overflow-y-auto border-t border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 animate-[slideUp_0.2s_ease-out]">
-              {mobilePanel === "tools" && (
-                <div className="p-4 space-y-4">
-                  {/* Search */}
-                  <WordSearch onSearch={(w) => { handleWordClick(w); setMobilePanel("definition"); }} />
-
-                  {/* Score */}
-                  <div className="rounded-xl bg-[#1a2a6c] p-4 text-white">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{progress.level.emoji}</span>
-                        <div>
-                          <p className="text-xs font-bold">{progress.level.name}</p>
-                          <p className="text-[10px] text-white/40">{progress.totalXp} XP total</p>
-                        </div>
-                      </div>
-                      {progress.streak > 0 && (
-                        <span className="text-sm bg-orange-500/20 rounded-full px-2 py-0.5">🔥{progress.streak}</span>
-                      )}
-                    </div>
-                    <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#00b894] rounded-full" style={{ width: `${Math.min(progress.levelProgress, 100)}%` }} />
-                    </div>
-                    <div className="grid grid-cols-4 gap-2 mt-3 text-center">
-                      <div><p className="text-sm font-bold">{progress.todayXp}</p><p className="text-[9px] text-white/40">XP</p></div>
-                      <div><p className="text-sm font-bold">{progress.todayMessages}</p><p className="text-[9px] text-white/40">Msgs</p></div>
-                      <div><p className="text-sm font-bold">{progress.todayQuizzes}</p><p className="text-[9px] text-white/40">Quiz</p></div>
-                      <div><p className="text-sm font-bold">{progress.todayWords}</p><p className="text-[9px] text-white/40">Words</p></div>
-                    </div>
-                  </div>
-
-                  {/* Suggestions */}
-                  <SuggestedPhrases
-                    messages={messages}
-                    onSelect={(phrase) => { sendMessage(phrase); setMobilePanel("none"); }}
-                    disabled={isStreaming}
-                  />
-                </div>
-              )}
-
-              {mobilePanel === "definition" && (
-                <div className="h-[50vh]">
-                  <WordPanel
-                    selectedWord={selectedWord}
-                    onClose={() => {
-                      setSelectedWord(null);
-                      setWordConjugation(null);
-                      setMobilePanel("none");
-                    }}
-                    onConjugation={handleConjugation}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          <InputBar
-            onSend={sendMessage}
-            onMicClick={toggleListening}
-            disabled={isStreaming}
-            isListening={isListening}
-          />
+          <InputBar onSend={sendMessage} onMicClick={toggleListening} disabled={isStreaming} isListening={isListening} />
         </div>
       </main>
 
       {/* ===== RIGHT SIDEBAR — Word Definition (desktop only) ===== */}
       <aside className="hidden md:flex flex-col w-72 bg-white dark:bg-zinc-900 border-l border-[#1a2a6c]/10">
-        <WordPanel
-          selectedWord={selectedWord}
-          onClose={() => {
-            setSelectedWord(null);
-            setWordConjugation(null);
-          }}
-          onConjugation={handleConjugation}
-        />
+        <WordPanel selectedWord={selectedWord}
+          onClose={() => { setSelectedWord(null); setWordConjugation(null); }}
+          onConjugation={handleConjugation} />
       </aside>
 
-      {/* Quiz Modal */}
+      {/* ===== MOBILE: Hamburger Drawer ===== */}
+      {menuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          {/* Overlay */}
+          <div className="flex-1 bg-black/50 animate-[fadeIn_0.2s_ease-out]" onClick={() => setMenuOpen(false)} />
+          {/* Drawer */}
+          <div className="w-72 bg-gradient-to-b from-[#1a2a6c] to-[#2d3a8c] flex flex-col overflow-y-auto animate-[slideLeft_0.25s_ease-out] p-5 gap-4">
+            {/* Close */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#00b894]">
+                  <img src="/avatar-tutor.png" alt="Tutor" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Ms. Emma</p>
+                  <p className="text-[10px] text-[#00b894]">Online</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setMenuOpen(false)}
+                className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="h-px bg-white/10" />
+
+            {/* Quizzes */}
+            <div className="flex gap-2">
+              <button type="button" onClick={() => { setQuizOpen(true); setMenuOpen(false); }}
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#00b894] to-[#00a383] text-white font-bold text-xs flex items-center justify-center gap-1">
+                🎯 Quiz
+              </button>
+              <button type="button" onClick={() => { setListeningQuizOpen(true); setMenuOpen(false); }}
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-bold text-xs flex items-center justify-center gap-1">
+                🎧 Listening
+              </button>
+            </div>
+
+            {/* Word Search */}
+            <WordSearch onSearch={(w) => { handleWordClick(w); setMenuOpen(false); }} />
+
+            <div className="h-px bg-white/10" />
+
+            {/* Progress compact */}
+            <div>
+              <p className="text-xs font-semibold text-[#7ec8b8] uppercase tracking-wide mb-2">My Progress</p>
+              <div className="rounded-xl bg-white/5 border border-white/10 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">{progress.level.emoji}</span>
+                    <div>
+                      <p className="text-xs font-bold text-white">{progress.level.name}</p>
+                      <p className="text-[10px] text-white/40">{progress.totalXp} XP total</p>
+                    </div>
+                  </div>
+                  {progress.streak > 0 && (
+                    <span className="text-sm bg-orange-500/20 rounded-full px-2 py-0.5 text-orange-300">🔥{progress.streak}</span>
+                  )}
+                </div>
+                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-[#00b894] rounded-full transition-all" style={{ width: `${Math.min(progress.levelProgress, 100)}%` }} />
+                </div>
+                <div className="grid grid-cols-4 gap-1 text-center">
+                  <div><p className="text-sm font-bold text-white">{progress.todayXp}</p><p className="text-[8px] text-white/40">XP</p></div>
+                  <div><p className="text-sm font-bold text-white">{progress.todayMessages}</p><p className="text-[8px] text-white/40">Msgs</p></div>
+                  <div><p className="text-sm font-bold text-white">{progress.todayQuizzes}</p><p className="text-[8px] text-white/40">Quiz</p></div>
+                  <div><p className="text-sm font-bold text-white">{progress.todayWords}</p><p className="text-[8px] text-white/40">Words</p></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="h-px bg-white/10" />
+
+            {/* Suggestions */}
+            <SuggestedPhrases messages={messages} onSelect={(phrase) => { sendMessage(phrase); setMenuOpen(false); }} disabled={isStreaming} />
+
+            {/* Footer */}
+            <div className="mt-auto space-y-2">
+              <button type="button" onClick={logout} className="w-full py-2 text-xs text-white/30 hover:text-white/60 transition-colors">
+                Cerrar sesión
+              </button>
+              <p className="text-[9px] text-white/20 text-center">{BUILD_VERSION}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== MOBILE: Word Definition Modal ===== */}
+      {wordModalOpen && selectedWord && (
+        <div className="md:hidden fixed inset-0 z-50 flex items-end justify-center bg-black/50 animate-[fadeIn_0.15s_ease-out]"
+          onClick={() => { setWordModalOpen(false); setSelectedWord(null); setWordConjugation(null); }}>
+          <div className="w-full max-h-[85vh] bg-white dark:bg-zinc-900 rounded-t-2xl overflow-hidden animate-[slideUp_0.25s_ease-out]"
+            onClick={(e) => e.stopPropagation()}>
+            {/* Drag handle */}
+            <div className="flex justify-center py-2">
+              <div className="w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+            </div>
+            <div className="h-[80vh]">
+              <WordPanel selectedWord={selectedWord}
+                onClose={() => { setWordModalOpen(false); setSelectedWord(null); setWordConjugation(null); }}
+                onConjugation={handleConjugation} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quiz Modals */}
       <VocabQuiz isOpen={quizOpen} onClose={() => setQuizOpen(false)} onComplete={(xp) => progress.addXp(xp, "quiz")} />
+      <ListeningQuiz isOpen={listeningQuizOpen} onClose={() => setListeningQuizOpen(false)} onComplete={(xp) => progress.addXp(xp, "quiz")} />
     </div>
   );
 }
