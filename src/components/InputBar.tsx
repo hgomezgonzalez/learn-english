@@ -7,9 +7,10 @@ interface InputBarProps {
   onMicClick: () => void;
   disabled: boolean;
   isListening: boolean;
+  showMic?: boolean;
 }
 
-export function InputBar({ onSend, onMicClick, disabled, isListening }: InputBarProps) {
+export function InputBar({ onSend, onMicClick, disabled, isListening, showMic = true }: InputBarProps) {
   const [text, setText] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -47,11 +48,19 @@ export function InputBar({ onSend, onMicClick, disabled, isListening }: InputBar
     <div className="flex items-end gap-1.5 sm:gap-2 border-t border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-2.5 sm:p-4">
       <button
         type="button"
-        onClick={onMicClick}
+        onClick={() => {
+          if (!showMic) {
+            alert("Voice input is not available in this browser. Try Safari.");
+            return;
+          }
+          onMicClick();
+        }}
         className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
           isListening
             ? "bg-red-500 text-white animate-pulse"
-            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+            : showMic
+              ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+              : "bg-zinc-100 dark:bg-zinc-800 text-zinc-300 dark:text-zinc-600"
         }`}
         aria-label={isListening ? "Stop listening" : "Start voice input"}
       >

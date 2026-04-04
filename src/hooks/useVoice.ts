@@ -33,11 +33,16 @@ declare global {
 export function useVoice({ onTranscript, lang = "en-US" }: UseVoiceOptions) {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [sttSupported, setSttSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+      setSttSupported(false);
+      return;
+    }
+    setSttSupported(true);
 
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
@@ -112,5 +117,5 @@ export function useVoice({ onTranscript, lang = "en-US" }: UseVoiceOptions) {
     setIsSpeaking(false);
   }, []);
 
-  return { isListening, isSpeaking, toggleListening, speak, stopSpeaking };
+  return { isListening, isSpeaking, sttSupported, toggleListening, speak, stopSpeaking };
 }
