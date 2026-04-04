@@ -177,9 +177,9 @@ export default function Home() {
           {/* Overlay */}
           <div className="flex-1 bg-black/50 animate-[fadeIn_0.2s_ease-out]" onClick={() => setMenuOpen(false)} />
           {/* Drawer */}
-          <div className="w-72 bg-gradient-to-b from-[#1a2a6c] to-[#2d3a8c] flex flex-col overflow-y-auto animate-[slideLeft_0.25s_ease-out] p-5 gap-4">
-            {/* Close */}
-            <div className="flex items-center justify-between">
+          <div className="w-[80vw] max-w-xs bg-gradient-to-b from-[#1a2a6c] to-[#2d3a8c] flex flex-col overflow-y-auto animate-[slideLeft_0.25s_ease-out] p-4 gap-3">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <div className="flex items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#00b894]">
@@ -198,64 +198,59 @@ export default function Home() {
               </button>
             </div>
 
-            <div className="h-px bg-white/10" />
+            {/* Games */}
+            <p className="text-[10px] font-semibold text-[#7ec8b8] uppercase tracking-widest">Games</p>
+            <button type="button" onClick={() => { setQuizOpen(true); setMenuOpen(false); }}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#00b894] to-[#00a383] text-white font-bold text-sm flex items-center gap-3 px-4">
+              <span className="text-2xl">🎯</span>
+              <div className="text-left"><p className="text-sm">Vocab Quiz</p><p className="text-[10px] text-white/60">Words & conjugation</p></div>
+            </button>
+            <button type="button" onClick={() => { setListeningQuizOpen(true); setMenuOpen(false); }}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-bold text-sm flex items-center gap-3 px-4">
+              <span className="text-2xl">🎧</span>
+              <div className="text-left"><p className="text-sm">Listening Quiz</p><p className="text-[10px] text-white/60">Listen & write</p></div>
+            </button>
 
-            {/* Quizzes */}
-            <div className="flex gap-2">
-              <button type="button" onClick={() => { setQuizOpen(true); setMenuOpen(false); }}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#00b894] to-[#00a383] text-white font-bold text-xs flex items-center justify-center gap-1">
-                🎯 Quiz
-              </button>
-              <button type="button" onClick={() => { setListeningQuizOpen(true); setMenuOpen(false); }}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-bold text-xs flex items-center justify-center gap-1">
-                🎧 Listening
-              </button>
-            </div>
-
-            {/* Word Search */}
+            {/* Tools */}
+            <p className="text-[10px] font-semibold text-[#7ec8b8] uppercase tracking-widest mt-1">Tools</p>
             <WordSearch onSearch={(w) => { handleWordClick(w); setMenuOpen(false); }} />
 
-            <div className="h-px bg-white/10" />
-
-            {/* Progress compact */}
-            <div>
-              <p className="text-xs font-semibold text-[#7ec8b8] uppercase tracking-wide mb-2">My Progress</p>
-              <div className="rounded-xl bg-white/5 border border-white/10 p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{progress.level.emoji}</span>
-                    <div>
-                      <p className="text-xs font-bold text-white">{progress.level.name}</p>
-                      <p className="text-[10px] text-white/40">{progress.totalXp} XP total</p>
-                    </div>
+            {/* Progress */}
+            <p className="text-[10px] font-semibold text-[#7ec8b8] uppercase tracking-widest mt-1">Progress</p>
+            <div className="rounded-xl bg-white/5 border border-white/10 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{progress.level.emoji}</span>
+                  <div>
+                    <p className="text-xs font-bold text-white">{progress.level.name}</p>
+                    <p className="text-[10px] text-white/40">{progress.totalXp} XP total</p>
                   </div>
-                  {progress.streak > 0 && (
-                    <span className="text-sm bg-orange-500/20 rounded-full px-2 py-0.5 text-orange-300">🔥{progress.streak}</span>
-                  )}
                 </div>
-                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#00b894] rounded-full transition-all" style={{ width: `${Math.min(progress.levelProgress, 100)}%` }} />
-                </div>
-                <div className="grid grid-cols-4 gap-1 text-center">
-                  <div><p className="text-sm font-bold text-white">{progress.todayXp}</p><p className="text-[8px] text-white/40">XP</p></div>
-                  <div><p className="text-sm font-bold text-white">{progress.todayMessages}</p><p className="text-[8px] text-white/40">Msgs</p></div>
-                  <div><p className="text-sm font-bold text-white">{progress.todayQuizzes}</p><p className="text-[8px] text-white/40">Quiz</p></div>
-                  <div><p className="text-sm font-bold text-white">{progress.todayWords}</p><p className="text-[8px] text-white/40">Words</p></div>
-                </div>
+                {progress.streak > 0 && (
+                  <span className="text-sm bg-orange-500/20 rounded-full px-2 py-0.5 text-orange-300">🔥{progress.streak}</span>
+                )}
+              </div>
+              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-[#00b894] rounded-full transition-all" style={{ width: `${Math.min(progress.levelProgress, 100)}%` }} />
+              </div>
+              <div className="grid grid-cols-4 gap-1 text-center">
+                <div><p className="text-sm font-bold text-white">{progress.todayXp}</p><p className="text-[8px] text-white/40">XP</p></div>
+                <div><p className="text-sm font-bold text-white">{progress.todayMessages}</p><p className="text-[8px] text-white/40">Msgs</p></div>
+                <div><p className="text-sm font-bold text-white">{progress.todayQuizzes}</p><p className="text-[8px] text-white/40">Quiz</p></div>
+                <div><p className="text-sm font-bold text-white">{progress.todayWords}</p><p className="text-[8px] text-white/40">Words</p></div>
               </div>
             </div>
 
-            <div className="h-px bg-white/10" />
-
             {/* Suggestions */}
+            <p className="text-[10px] font-semibold text-[#7ec8b8] uppercase tracking-widest mt-1">Try saying...</p>
             <SuggestedPhrases messages={messages} onSelect={(phrase) => { sendMessage(phrase); setMenuOpen(false); }} disabled={isStreaming} />
 
             {/* Footer */}
-            <div className="mt-auto space-y-2">
-              <button type="button" onClick={logout} className="w-full py-2 text-xs text-white/30 hover:text-white/60 transition-colors">
+            <div className="mt-auto pt-3 border-t border-white/10 space-y-1">
+              <button type="button" onClick={logout} className="w-full py-2.5 rounded-lg bg-white/5 text-xs text-white/50 hover:text-white/80 transition-colors">
                 Cerrar sesión
               </button>
-              <p className="text-[9px] text-white/20 text-center">{BUILD_VERSION}</p>
+              <p className="text-[8px] text-white/20 text-center">{BUILD_VERSION}</p>
             </div>
           </div>
         </div>

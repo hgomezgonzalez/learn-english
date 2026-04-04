@@ -44,7 +44,7 @@ export function InputBar({ onSend, onMicClick, disabled, isListening }: InputBar
   }
 
   return (
-    <div className="flex items-end gap-2 border-t border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4">
+    <div className="flex items-end gap-1.5 sm:gap-2 border-t border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-2.5 sm:p-4">
       <button
         type="button"
         onClick={onMicClick}

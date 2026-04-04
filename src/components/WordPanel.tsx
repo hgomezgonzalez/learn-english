@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { VerbConjugation } from "@/types";
 import { speakWord, speakSentence } from "@/lib/speech";
+import { ConjugationPanel } from "./ConjugationPanel";
 
 function AudioBtn({ text, isSentence }: { text: string; isSentence?: boolean }) {
   return (
@@ -185,10 +186,10 @@ export function WordPanel({
               </p>
             </div>
 
-            {/* Verb indicator */}
+            {/* Inline conjugation */}
             {definition.conjugation && (
-              <div className="mt-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-xs text-green-600 dark:text-green-400 text-center font-medium">
-                ✓ Conjugation table shown below the chat
+              <div className="mt-2 -mx-4">
+                <ConjugationPanel data={definition.conjugation} />
               </div>
             )}
           </div>

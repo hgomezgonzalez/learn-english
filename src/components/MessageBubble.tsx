@@ -38,9 +38,9 @@ export function MessageBubble({ message, onWordClick }: MessageBubbleProps) {
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div className="flex flex-col gap-1 max-w-[85%]">
+      <div className="flex flex-col gap-0.5 max-w-[92%] sm:max-w-[85%]">
         <div
-          className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+          className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 text-sm leading-relaxed whitespace-pre-wrap ${
             isUser
               ? "bg-blue-600 text-white rounded-br-sm"
               : "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 rounded-bl-sm"
