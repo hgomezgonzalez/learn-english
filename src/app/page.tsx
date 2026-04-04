@@ -14,7 +14,7 @@ import { ScoreBoard } from "@/components/ScoreBoard";
 import { VocabQuiz } from "@/components/VocabQuiz";
 import { ListeningQuiz } from "@/components/ListeningQuiz";
 import type { VerbConjugation } from "@/types";
-import { initVoices } from "@/lib/speech";
+import { initVoices, unlockAudio } from "@/lib/speech";
 import { useProgress } from "@/hooks/useProgress";
 import { WelcomeModal } from "@/components/WelcomeModal";
 
@@ -34,6 +34,11 @@ export default function Home() {
 
   useEffect(() => {
     initVoices();
+    // Unlock audio on first user interaction (needed for iOS)
+    const unlock = () => { unlockAudio(); document.removeEventListener("touchstart", unlock); document.removeEventListener("click", unlock); };
+    document.addEventListener("touchstart", unlock, { once: true });
+    document.addEventListener("click", unlock, { once: true });
+    return () => { document.removeEventListener("touchstart", unlock); document.removeEventListener("click", unlock); };
   }, []);
 
   const handleTranscript = useCallback(

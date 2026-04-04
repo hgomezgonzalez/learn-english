@@ -1,24 +1,23 @@
-// Robust speech helper - works across Chrome, Edge, Firefox
+// Speech helper — compatible with iOS Safari, Chrome, Edge, Firefox
+// iOS requires speak() to be called synchronously from a user gesture.
+// No setTimeout between tap and speak().
 
-let voicesLoaded = false;
 let cachedVoice: SpeechSynthesisVoice | null = null;
-let synthWarmedUp = false;
+let audioUnlocked = false;
 
-function getEnglishFemaleVoice(): SpeechSynthesisVoice | null {
+function getEnglishVoice(): SpeechSynthesisVoice | null {
   if (cachedVoice) return cachedVoice;
 
   const voices = window.speechSynthesis.getVoices();
   if (voices.length === 0) return null;
 
-  const female = voices.find(
-    (v) =>
-      v.lang.startsWith("en") &&
-      (/female/i.test(v.name) ||
-        /zira|samantha|karen|victoria|fiona|susan|hazel|linda|jenny|aria|google us/i.test(v.name))
-  );
-
   cachedVoice =
-    female ||
+    voices.find(
+      (v) =>
+        v.lang.startsWith("en") &&
+        (/female/i.test(v.name) ||
+          /samantha|karen|victoria|fiona|susan|hazel|linda|jenny|aria|google us|moira/i.test(v.name))
+    ) ||
     voices.find((v) => v.lang === "en-US") ||
     voices.find((v) => v.lang.startsWith("en")) ||
     null;
@@ -26,88 +25,83 @@ function getEnglishFemaleVoice(): SpeechSynthesisVoice | null {
   return cachedVoice;
 }
 
-// Pre-load voices (call once on app mount)
+// Must be called from a user gesture (click/tap) to unlock iOS audio
+export function unlockAudio() {
+  if (audioUnlocked) return;
+  const synth = window.speechSynthesis;
+  if (!synth) return;
+
+  // iOS needs a real speak() call from a gesture to unlock
+  const u = new SpeechSynthesisUtterance("");
+  u.volume = 0;
+  synth.speak(u);
+  audioUnlocked = true;
+}
+
+// Pre-load voices
 export function initVoices(): Promise<void> {
   return new Promise((resolve) => {
-    if (voicesLoaded) {
-      resolve();
-      return;
-    }
+    const synth = window.speechSynthesis;
+    if (!synth) { resolve(); return; }
 
-    const voices = window.speechSynthesis.getVoices();
+    const voices = synth.getVoices();
     if (voices.length > 0) {
-      voicesLoaded = true;
-      getEnglishFemaleVoice();
+      getEnglishVoice();
       resolve();
       return;
     }
 
-    // Chrome loads voices asynchronously
-    window.speechSynthesis.onvoiceschanged = () => {
-      voicesLoaded = true;
-      getEnglishFemaleVoice();
-      window.speechSynthesis.onvoiceschanged = null;
+    synth.onvoiceschanged = () => {
+      getEnglishVoice();
+      synth.onvoiceschanged = null;
       resolve();
     };
 
-    // Timeout fallback
-    setTimeout(() => {
-      voicesLoaded = true;
-      resolve();
-    }, 2000);
+    setTimeout(resolve, 2000);
   });
 }
 
-function createUtterance(text: string, rate: number): SpeechSynthesisUtterance {
+function doSpeak(text: string, rate: number) {
+  const synth = window.speechSynthesis;
+  if (!synth) return;
+
+  // Cancel previous — synchronous, no delay
+  synth.cancel();
+  try { synth.resume(); } catch {}
+
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   utterance.rate = rate;
   utterance.pitch = 1.0;
   utterance.volume = 1.0;
-  const voice = getEnglishFemaleVoice();
+
+  const voice = getEnglishVoice();
   if (voice) utterance.voice = voice;
-  return utterance;
+
+  // Speak immediately — critical for iOS
+  synth.speak(utterance);
+
+  // Chrome keepalive for long texts
+  if (text.length > 50) {
+    const keepAlive = setInterval(() => {
+      if (!synth.speaking) {
+        clearInterval(keepAlive);
+      } else {
+        synth.pause();
+        synth.resume();
+      }
+    }, 10000);
+    utterance.onend = () => clearInterval(keepAlive);
+    utterance.onerror = () => clearInterval(keepAlive);
+  }
 }
 
-function resetAndSpeak(utterance: SpeechSynthesisUtterance) {
-  const synth = window.speechSynthesis;
-  synth.cancel();
-  try { synth.resume(); } catch {}
-  // Let Chrome fully reset, then speak
-  setTimeout(() => {
-    synth.speak(utterance);
-  }, 300);
-}
-
-// Speak a word — prepend the word itself so nothing important is lost
+// Speak a word — repeats it so user catches it clearly
 export function speakWord(text: string) {
-  const synth = window.speechSynthesis;
-  if (!synth) return;
-
-  // "word. ... word" — first instance warms up audio, second is the clean one
-  const fullText = `${text}. ... ${text}`;
-  const utterance = createUtterance(fullText, 0.8);
-  resetAndSpeak(utterance);
+  doSpeak(`${text} ... ${text}`, 0.8);
 }
 
-// Speak a sentence — no tricks needed, just ensure synth is reset
+// Speak a sentence
 export function speakSentence(text: string) {
-  const synth = window.speechSynthesis;
-  if (!synth) return;
-
-  const utterance = createUtterance(text, 0.9);
-  resetAndSpeak(utterance);
-
-  // Chrome bug: pauses long speech after ~15s
-  const keepAlive = setInterval(() => {
-    if (!synth.speaking) {
-      clearInterval(keepAlive);
-    } else {
-      synth.pause();
-      synth.resume();
-    }
-  }, 10000);
-
-  utterance.onend = () => clearInterval(keepAlive);
-  utterance.onerror = () => clearInterval(keepAlive);
+  doSpeak(text, 0.9);
 }

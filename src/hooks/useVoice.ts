@@ -73,31 +73,38 @@ export function useVoice({ onTranscript, lang = "en-US" }: UseVoiceOptions) {
     if (!synth) return;
 
     synth.cancel();
+    try { synth.resume(); } catch {}
 
-    setTimeout(() => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "en-US";
-      utterance.rate = 0.9;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 0.9;
 
-      // Select a female English voice
-      const voices = synth.getVoices();
-      const femaleVoice = voices.find(
-        (v) =>
-          v.lang.startsWith("en") &&
-          (/female/i.test(v.name) || /zira|samantha|karen|victoria|fiona|susan|hazel|linda|jenny|aria/i.test(v.name))
-      ) || voices.find(
-        (v) => v.lang.startsWith("en") && /woman|girl/i.test(v.name)
-      ) || voices.find(
-        (v) => v.lang.startsWith("en-US")
-      );
+    const voices = synth.getVoices();
+    const femaleVoice = voices.find(
+      (v) =>
+        v.lang.startsWith("en") &&
+        (/female/i.test(v.name) || /samantha|karen|victoria|fiona|susan|hazel|linda|jenny|aria|moira/i.test(v.name))
+    ) || voices.find((v) => v.lang === "en-US")
+      || voices.find((v) => v.lang.startsWith("en"));
 
-      if (femaleVoice) utterance.voice = femaleVoice;
+    if (femaleVoice) utterance.voice = femaleVoice;
 
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
-      synth.speak(utterance);
-    }, 100);
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    // Speak synchronously — no setTimeout (required for iOS)
+    synth.speak(utterance);
+
+    // Chrome keepalive for long texts
+    if (text.length > 100) {
+      const keepAlive = setInterval(() => {
+        if (!synth.speaking) { clearInterval(keepAlive); }
+        else { synth.pause(); synth.resume(); }
+      }, 10000);
+      utterance.onend = () => { setIsSpeaking(false); clearInterval(keepAlive); };
+      utterance.onerror = () => { setIsSpeaking(false); clearInterval(keepAlive); };
+    }
   }, []);
 
   const stopSpeaking = useCallback(() => {
