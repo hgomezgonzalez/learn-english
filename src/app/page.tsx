@@ -23,8 +23,8 @@ export default function Home() {
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [wordConjugation, setWordConjugation] = useState<VerbConjugation | null>(null);
   const [quizOpen, setQuizOpen] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState<"none" | "tools" | "definition">("none");
 
-  // Pre-load speech voices on mount
   useEffect(() => {
     initVoices();
   }, []);
@@ -40,14 +40,13 @@ export default function Home() {
     onTranscript: handleTranscript,
   });
 
-  // Auto-speak assistant messages when streaming ends + track XP
   useEffect(() => {
     if (isStreaming) return;
     const lastMsg = messages[messages.length - 1];
     if (lastMsg?.role === "assistant" && lastMsg.content && lastMsg.content !== lastAssistantRef.current) {
       lastAssistantRef.current = lastMsg.content;
       speak(lastMsg.content);
-      progress.addXp(5, "message"); // +5 XP per conversation exchange
+      progress.addXp(5, "message");
     }
   }, [isStreaming, messages, speak, progress]);
 
@@ -59,14 +58,14 @@ export default function Home() {
 
   const handleWordClick = useCallback((word: string) => {
     setSelectedWord(word);
-    progress.addXp(2, "word"); // +2 XP per word looked up
+    setMobilePanel("definition");
+    progress.addXp(2, "word");
   }, [progress]);
 
   return (
     <div className="flex h-screen bg-[#1a2a6c]">
-      {/* Left panel - Avatar + Search + Score + Suggestions */}
+      {/* ===== LEFT SIDEBAR (desktop only) ===== */}
       <aside className="hidden lg:flex flex-col items-center w-72 bg-gradient-to-b from-[#1a2a6c] to-[#2d3a8c] p-5 pt-4 gap-5 overflow-y-auto">
-        {/* ROHU Branding */}
         <div className="flex items-center gap-2 w-full mb-1">
           <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -82,7 +81,6 @@ export default function Home() {
 
         <Avatar state={effectiveAvatarState} />
 
-        {/* Vocab Quiz button */}
         <button
           type="button"
           onClick={() => setQuizOpen(true)}
@@ -92,12 +90,10 @@ export default function Home() {
           Vocab Quiz
         </button>
 
-        {/* Word Search */}
         <div className="w-full">
-          <WordSearch onSearch={setSelectedWord} />
+          <WordSearch onSearch={handleWordClick} />
         </div>
 
-        {/* Score */}
         <ScoreBoard
           totalXp={progress.totalXp}
           todayXp={progress.todayXp}
@@ -110,7 +106,6 @@ export default function Home() {
           todayWords={progress.todayWords}
         />
 
-        {/* Suggested Phrases */}
         <div className="w-full">
           <SuggestedPhrases
             messages={messages}
@@ -119,7 +114,6 @@ export default function Home() {
           />
         </div>
 
-        {/* Logout */}
         <button
           type="button"
           onClick={async () => {
@@ -132,28 +126,27 @@ export default function Home() {
         </button>
       </aside>
 
-      {/* Center - Chat */}
+      {/* ===== CENTER — CHAT ===== */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#1a2a6c] border-b border-white/10">
+        <header className="lg:hidden flex items-center justify-between px-3 py-2 bg-[#1a2a6c] border-b border-white/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#00b894] flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#00b894] flex-shrink-0">
               <img src="/avatar-tutor.png" alt="Tutor" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h1 className="text-sm font-semibold text-white">Ms. Emma</h1>
-              <p className="text-xs text-[#00b894]">AI English Tutor</p>
+              <p className="text-xs font-bold text-white">ROHU</p>
+              <p className="text-[10px] text-[#00b894]">Learn English</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {progress.streak > 0 && (
-              <span className="text-sm">🔥{progress.streak}</span>
+              <span className="text-xs text-white">🔥{progress.streak}</span>
             )}
-            <div className="flex items-center gap-1 bg-white/10 rounded-full px-3 py-1">
-              <span className="text-xs">{progress.level.emoji}</span>
-              <span className="text-xs font-bold text-white">{progress.todayXp} XP</span>
-            </div>
+            <span className="text-[10px] bg-white/10 rounded-full px-2 py-0.5 text-white font-bold">
+              {progress.level.emoji} {progress.todayXp}XP
+            </span>
           </div>
         </header>
 
@@ -161,17 +154,115 @@ export default function Home() {
         <div className="flex-1 flex flex-col bg-white dark:bg-zinc-900 overflow-hidden rounded-tl-2xl lg:rounded-tl-none">
           <ChatWindow messages={messages} onWordClick={handleWordClick} />
 
-          {/* Error banner */}
           {error && (
             <div className="px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm text-center">
               {error}
             </div>
           )}
 
-          {/* Conjugation panel */}
           <ConjugationPanel data={wordConjugation} />
 
-          {/* Input */}
+          {/* ===== MOBILE TOOLBAR ===== */}
+          <div className="lg:hidden flex items-center gap-1.5 px-3 py-2 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+            <button
+              type="button"
+              onClick={() => setQuizOpen(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#00b894] text-white text-[11px] font-bold"
+            >
+              🎯 Quiz
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobilePanel(mobilePanel === "tools" ? "none" : "tools")}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors ${
+                mobilePanel === "tools"
+                  ? "bg-[#1a2a6c] text-white"
+                  : "bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
+              }`}
+            >
+              📊 Progress
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobilePanel(mobilePanel === "definition" ? "none" : "definition")}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors ${
+                mobilePanel === "definition"
+                  ? "bg-[#1a2a6c] text-white"
+                  : "bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
+              }`}
+            >
+              📖 {selectedWord || "Dictionary"}
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                await fetch("/api/auth", { method: "DELETE" });
+                window.location.href = "/login";
+              }}
+              className="ml-auto px-2 py-1.5 rounded-full text-[11px] text-zinc-400"
+            >
+              Salir
+            </button>
+          </div>
+
+          {/* ===== MOBILE PANELS (slide up) ===== */}
+          {mobilePanel !== "none" && (
+            <div className="lg:hidden max-h-[50vh] overflow-y-auto border-t border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 animate-[slideUp_0.2s_ease-out]">
+              {mobilePanel === "tools" && (
+                <div className="p-4 space-y-4">
+                  {/* Search */}
+                  <WordSearch onSearch={(w) => { handleWordClick(w); setMobilePanel("definition"); }} />
+
+                  {/* Score */}
+                  <div className="rounded-xl bg-[#1a2a6c] p-4 text-white">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{progress.level.emoji}</span>
+                        <div>
+                          <p className="text-xs font-bold">{progress.level.name}</p>
+                          <p className="text-[10px] text-white/40">{progress.totalXp} XP total</p>
+                        </div>
+                      </div>
+                      {progress.streak > 0 && (
+                        <span className="text-sm bg-orange-500/20 rounded-full px-2 py-0.5">🔥{progress.streak}</span>
+                      )}
+                    </div>
+                    <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-[#00b894] rounded-full" style={{ width: `${Math.min(progress.levelProgress, 100)}%` }} />
+                    </div>
+                    <div className="grid grid-cols-4 gap-2 mt-3 text-center">
+                      <div><p className="text-sm font-bold">{progress.todayXp}</p><p className="text-[9px] text-white/40">XP</p></div>
+                      <div><p className="text-sm font-bold">{progress.todayMessages}</p><p className="text-[9px] text-white/40">Msgs</p></div>
+                      <div><p className="text-sm font-bold">{progress.todayQuizzes}</p><p className="text-[9px] text-white/40">Quiz</p></div>
+                      <div><p className="text-sm font-bold">{progress.todayWords}</p><p className="text-[9px] text-white/40">Words</p></div>
+                    </div>
+                  </div>
+
+                  {/* Suggestions */}
+                  <SuggestedPhrases
+                    messages={messages}
+                    onSelect={(phrase) => { sendMessage(phrase); setMobilePanel("none"); }}
+                    disabled={isStreaming}
+                  />
+                </div>
+              )}
+
+              {mobilePanel === "definition" && (
+                <div className="h-[50vh]">
+                  <WordPanel
+                    selectedWord={selectedWord}
+                    onClose={() => {
+                      setSelectedWord(null);
+                      setWordConjugation(null);
+                      setMobilePanel("none");
+                    }}
+                    onConjugation={handleConjugation}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           <InputBar
             onSend={sendMessage}
             onMicClick={toggleListening}
@@ -181,7 +272,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Right panel - Word Definition */}
+      {/* ===== RIGHT SIDEBAR — Word Definition (desktop only) ===== */}
       <aside className="hidden md:flex flex-col w-72 bg-white dark:bg-zinc-900 border-l border-[#1a2a6c]/10">
         <WordPanel
           selectedWord={selectedWord}

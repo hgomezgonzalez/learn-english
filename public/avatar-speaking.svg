@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280" fill="none">
+  <!-- Whole body subtle movement -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0,0;1,-3;-1,0;0,-2;0,0" dur="2s" repeatCount="indefinite"/>
+
+    <!-- Body -->
+    <rect x="50" y="180" width="100" height="100" rx="20" fill="#5B8DEF"/>
+    <!-- Neck -->
+    <rect x="85" y="165" width="30" height="25" rx="5" fill="#F5C6A0"/>
+
+    <!-- Head with nod -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="0 100 110;-3 100 110;2 100 110;-1 100 110;3 100 110;0 100 110" dur="2.5s" repeatCount="indefinite"/>
+      <ellipse cx="100" cy="110" rx="50" ry="60" fill="#F5C6A0"/>
+      <!-- Hair -->
+      <path d="M50 100 Q50 50 100 40 Q150 50 150 100 Q145 70 100 60 Q55 70 50 100Z" fill="#4A2C2A"/>
+      <path d="M50 100 Q45 130 48 150 Q52 135 55 115Z" fill="#4A2C2A"/>
+      <path d="M150 100 Q155 130 152 150 Q148 135 145 115Z" fill="#4A2C2A"/>
+      <!-- Glasses -->
+      <circle cx="82" cy="105" r="15" stroke="#333" stroke-width="2.5" fill="none"/>
+      <circle cx="118" cy="105" r="15" stroke="#333" stroke-width="2.5" fill="none"/>
+      <line x1="97" y1="105" x2="103" y2="105" stroke="#333" stroke-width="2"/>
+      <!-- Eyes - expressive -->
+      <ellipse cx="82" cy="105" rx="5" ry="5.5" fill="#2D1B14">
+        <animate attributeName="ry" values="5.5;5.5;0.5;5.5;5.5;5.5;0.5;5.5" dur="3s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="118" cy="105" rx="5" ry="5.5" fill="#2D1B14">
+        <animate attributeName="ry" values="5.5;5.5;0.5;5.5;5.5;5.5;0.5;5.5" dur="3s" repeatCount="indefinite"/>
+      </ellipse>
+      <circle cx="84" cy="103" r="2" fill="white"/>
+      <circle cx="120" cy="103" r="2" fill="white"/>
+      <!-- Eyebrows - animated -->
+      <path d="M72 92 Q80 87 92 90" stroke="#3D2322" stroke-width="2" fill="none">
+        <animate attributeName="d" values="M72 92 Q80 87 92 90;M72 89 Q80 84 92 87;M72 92 Q80 87 92 90" dur="1.5s" repeatCount="indefinite"/>
+      </path>
+      <path d="M108 90 Q120 87 128 92" stroke="#3D2322" stroke-width="2" fill="none">
+        <animate attributeName="d" values="M108 90 Q120 87 128 92;M108 87 Q120 84 128 89;M108 90 Q120 87 128 92" dur="1.5s" repeatCount="indefinite"/>
+      </path>
+      <!-- Mouth opening/closing -->
+      <ellipse cx="100" cy="135" rx="10" ry="5" fill="#C0504D">
+        <animate attributeName="ry" values="3;8;4;7;3;6;3" dur="0.6s" repeatCount="indefinite"/>
+        <animate attributeName="rx" values="10;8;10;9;10;8;10" dur="0.6s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="100" cy="133" rx="7" ry="2" fill="white" opacity="0.6">
+        <animate attributeName="ry" values="2;1;2;1;2" dur="0.6s" repeatCount="indefinite"/>
+      </ellipse>
+      <!-- Blush -->
+      <ellipse cx="70" cy="125" rx="8" ry="4" fill="#FDCCC5" opacity="0.5"/>
+      <ellipse cx="130" cy="125" rx="8" ry="4" fill="#FDCCC5" opacity="0.5"/>
+    </g>
+
+    <!-- Book in hand -->
+    <rect x="120" y="200" width="40" height="50" rx="4" fill="#E53E3E">
+      <animateTransform attributeName="transform" type="rotate" values="0 140 225;-3 140 225;3 140 225;0 140 225" dur="2s" repeatCount="indefinite"/>
+    </rect>
+    <text x="127" y="228" font-size="8" fill="white" font-weight="bold" font-family="sans-serif">ENG</text>
+    <ellipse cx="125" cy="225" rx="10" ry="8" fill="#F5C6A0"/>
+
+    <!-- Left hand gesticulating -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="0 55 200;-20 55 200;10 55 200;-15 55 200;5 55 200;-20 55 200;0 55 200" dur="1.8s" repeatCount="indefinite"/>
+      <path d="M50 210 Q25 185 30 160" stroke="#F5C6A0" stroke-width="12" stroke-linecap="round" fill="none"/>
+      <circle cx="30" cy="157" r="7" fill="#F5C6A0"/>
+      <!-- Fingers spread -->
+      <line x1="30" y1="157" x2="22" y2="148" stroke="#F5C6A0" stroke-width="3" stroke-linecap="round"/>
+      <line x1="30" y1="157" x2="28" y2="146" stroke="#F5C6A0" stroke-width="3" stroke-linecap="round"/>
+      <line x1="30" y1="157" x2="35" y2="147" stroke="#F5C6A0" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <!-- Speech bubbles -->
+    <circle cx="160" cy="80" r="6" fill="#00b894" opacity="0.6">
+      <animate attributeName="r" values="4;7;4" dur="1.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;0.2;0.6" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="170" cy="65" r="4" fill="#00b894" opacity="0.4">
+      <animate attributeName="r" values="3;5;3" dur="1.2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0.1;0.4" dur="1.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="175" cy="50" r="3" fill="#00b894" opacity="0.3">
+      <animate attributeName="r" values="2;4;2" dur="1s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

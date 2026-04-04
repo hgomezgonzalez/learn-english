@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280" fill="none">
+  <!-- Body -->
+  <rect x="50" y="180" width="100" height="100" rx="20" fill="#5B8DEF"/>
+  <!-- Neck -->
+  <rect x="85" y="165" width="30" height="25" rx="5" fill="#F5C6A0"/>
+  <!-- Head -->
+  <ellipse cx="100" cy="110" rx="50" ry="60" fill="#F5C6A0"/>
+  <!-- Hair -->
+  <path d="M50 100 Q50 50 100 40 Q150 50 150 100 Q145 70 100 60 Q55 70 50 100Z" fill="#4A2C2A"/>
+  <path d="M50 100 Q45 130 48 150 Q52 135 55 115Z" fill="#4A2C2A"/>
+  <path d="M150 100 Q155 130 152 150 Q148 135 145 115Z" fill="#4A2C2A"/>
+  <!-- Glasses -->
+  <circle cx="82" cy="105" r="15" stroke="#333" stroke-width="2.5" fill="none"/>
+  <circle cx="118" cy="105" r="15" stroke="#333" stroke-width="2.5" fill="none"/>
+  <line x1="97" y1="105" x2="103" y2="105" stroke="#333" stroke-width="2"/>
+  <!-- Eyes with blink animation -->
+  <ellipse cx="82" cy="105" rx="5" ry="5.5" fill="#2D1B14">
+    <animate attributeName="ry" values="5.5;5.5;5.5;0.5;5.5;5.5;5.5" dur="4s" repeatCount="indefinite"/>
+  </ellipse>
+  <ellipse cx="118" cy="105" rx="5" ry="5.5" fill="#2D1B14">
+    <animate attributeName="ry" values="5.5;5.5;5.5;0.5;5.5;5.5;5.5" dur="4s" repeatCount="indefinite"/>
+  </ellipse>
+  <circle cx="84" cy="103" r="2" fill="white"/>
+  <circle cx="120" cy="103" r="2" fill="white"/>
+  <!-- Smile -->
+  <path d="M85 130 Q100 142 115 130" stroke="#D4726A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Blush -->
+  <ellipse cx="70" cy="125" rx="8" ry="4" fill="#FDCCC5" opacity="0.5"/>
+  <ellipse cx="130" cy="125" rx="8" ry="4" fill="#FDCCC5" opacity="0.5"/>
+  <!-- Book in hand -->
+  <rect x="120" y="200" width="40" height="50" rx="4" fill="#E53E3E"/>
+  <text x="127" y="228" font-size="8" fill="white" font-weight="bold" font-family="sans-serif">ENG</text>
+  <!-- Hand holding book -->
+  <ellipse cx="125" cy="225" rx="10" ry="8" fill="#F5C6A0"/>
+  <!-- Left hand waving gently -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate" values="0 65 200;5 65 200;0 65 200;-5 65 200;0 65 200" dur="3s" repeatCount="indefinite"/>
+    <path d="M50 210 Q30 195 35 175" stroke="#F5C6A0" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <circle cx="35" cy="172" r="7" fill="#F5C6A0"/>
+  </g>
+  <!-- Subtle body breathing -->
+  <animateTransform attributeName="transform" type="translate" values="0,0;0,-2;0,0" dur="3s" repeatCount="indefinite"/>
+</svg>
