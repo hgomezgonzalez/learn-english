@@ -50,7 +50,7 @@ export function InputBar({ onSend, onMicClick, disabled, isListening, showMic = 
         type="button"
         onClick={() => {
           if (!showMic) {
-            alert("Voice input is not available in this browser. Try Safari.");
+            alert("🎤 El micrófono no está disponible en este navegador.\n\nPara usar voz, abre esta página en Safari.\n\nEn iPhone: solo Safari soporta reconocimiento de voz.");
             return;
           }
           onMicClick();
