@@ -25,9 +25,15 @@ function getEnglishVoice(): SpeechSynthesisVoice | null {
   return cachedVoice;
 }
 
-// Must be called from a user gesture (click/tap) to unlock iOS audio
+// Must be called from a user gesture (click/tap) to unlock iOS audio.
+// On desktop Chrome, speaking an empty utterance can corrupt the synth queue.
 export function unlockAudio() {
   if (audioUnlocked) return;
+  audioUnlocked = true;
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if (!isIOS) return;
+
   const synth = window.speechSynthesis;
   if (!synth) return;
 
@@ -35,7 +41,6 @@ export function unlockAudio() {
   const u = new SpeechSynthesisUtterance("");
   u.volume = 0;
   synth.speak(u);
-  audioUnlocked = true;
 }
 
 // Pre-load voices
@@ -66,12 +71,9 @@ function doSpeak(text: string, rate: number) {
   if (!synth) return;
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const wasSpeaking = synth.speaking || synth.pending;
 
-  if (wasSpeaking) {
-    synth.cancel();
-    try { synth.resume(); } catch {}
-  }
+  synth.cancel();
+  try { synth.resume(); } catch {}
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
@@ -82,7 +84,6 @@ function doSpeak(text: string, rate: number) {
   const voice = getEnglishVoice();
   if (voice) utterance.voice = voice;
 
-  // Chrome keepalive for long texts
   const setupKeepAlive = () => {
     if (text.length > 50) {
       const keepAlive = setInterval(() => {
@@ -98,16 +99,16 @@ function doSpeak(text: string, rate: number) {
     }
   };
 
-  // iOS requires synchronous speak from gesture — no delay allowed
-  // Chrome desktop needs a brief delay after cancel() or speak is silently dropped
-  if (!isIOS && wasSpeaking) {
+  if (isIOS) {
+    // iOS requires synchronous speak from gesture — no delay allowed
+    synth.speak(utterance);
+    setupKeepAlive();
+  } else {
+    // Desktop Chrome needs a brief delay after cancel() or speak is silently dropped
     setTimeout(() => {
       synth.speak(utterance);
       setupKeepAlive();
-    }, 80);
-  } else {
-    synth.speak(utterance);
-    setupKeepAlive();
+    }, 100);
   }
 }
 

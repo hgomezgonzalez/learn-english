@@ -78,12 +78,9 @@ export function useVoice({ onTranscript, lang = "en-US" }: UseVoiceOptions) {
     if (!synth) return;
 
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const wasSpeaking = synth.speaking || synth.pending;
 
-    if (wasSpeaking) {
-      synth.cancel();
-      try { synth.resume(); } catch {}
-    }
+    synth.cancel();
+    try { synth.resume(); } catch {}
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
@@ -114,16 +111,16 @@ export function useVoice({ onTranscript, lang = "en-US" }: UseVoiceOptions) {
       }
     };
 
-    // iOS requires synchronous speak from gesture — no delay allowed
-    // Chrome desktop needs a brief delay after cancel() or speak is silently dropped
-    if (!isIOS && wasSpeaking) {
+    if (isIOS) {
+      // iOS requires synchronous speak from gesture — no delay allowed
+      synth.speak(utterance);
+      setupKeepAlive();
+    } else {
+      // Desktop Chrome needs a brief delay after cancel() or speak is silently dropped
       setTimeout(() => {
         synth.speak(utterance);
         setupKeepAlive();
-      }, 80);
-    } else {
-      synth.speak(utterance);
-      setupKeepAlive();
+      }, 100);
     }
   }, []);
 
