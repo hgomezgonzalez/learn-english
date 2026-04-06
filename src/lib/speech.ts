@@ -70,8 +70,6 @@ function doSpeak(text: string, rate: number) {
   const synth = window.speechSynthesis;
   if (!synth) return;
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
   synth.cancel();
   try { synth.resume(); } catch {}
 
@@ -84,31 +82,21 @@ function doSpeak(text: string, rate: number) {
   const voice = getEnglishVoice();
   if (voice) utterance.voice = voice;
 
-  const setupKeepAlive = () => {
-    if (text.length > 50) {
-      const keepAlive = setInterval(() => {
-        if (!synth.speaking) {
-          clearInterval(keepAlive);
-        } else {
-          synth.pause();
-          synth.resume();
-        }
-      }, 10000);
-      utterance.onend = () => clearInterval(keepAlive);
-      utterance.onerror = () => clearInterval(keepAlive);
-    }
-  };
+  // Speak synchronously — required for both iOS and Chrome user gesture context
+  synth.speak(utterance);
 
-  if (isIOS) {
-    // iOS requires synchronous speak from gesture — no delay allowed
-    synth.speak(utterance);
-    setupKeepAlive();
-  } else {
-    // Desktop Chrome needs a brief delay after cancel() or speak is silently dropped
-    setTimeout(() => {
-      synth.speak(utterance);
-      setupKeepAlive();
-    }, 100);
+  // Chrome keepalive for long texts (prevents 15s timeout)
+  if (text.length > 50) {
+    const keepAlive = setInterval(() => {
+      if (!synth.speaking) {
+        clearInterval(keepAlive);
+      } else {
+        synth.pause();
+        synth.resume();
+      }
+    }, 10000);
+    utterance.onend = () => clearInterval(keepAlive);
+    utterance.onerror = () => clearInterval(keepAlive);
   }
 }
 
