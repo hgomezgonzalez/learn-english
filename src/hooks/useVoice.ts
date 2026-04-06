@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { stopServerTTS } from "@/lib/speech";
 
 interface UseVoiceOptions {
   onTranscript: (text: string) => void;
@@ -30,11 +31,14 @@ declare global {
   }
 }
 
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent);
+
 export function useVoice({ onTranscript, lang = "en-US" }: UseVoiceOptions) {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [sttSupported, setSttSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -74,46 +78,94 @@ export function useVoice({ onTranscript, lang = "en-US" }: UseVoiceOptions) {
   }, [isListening]);
 
   const speak = useCallback((text: string) => {
-    const synth = window.speechSynthesis;
-    if (!synth) return;
+    if (isIOS()) {
+      // iOS: use Web Speech API
+      const synth = window.speechSynthesis;
+      if (!synth) return;
 
-    synth.cancel();
-    try { synth.resume(); } catch {}
+      synth.cancel();
+      try { synth.resume(); } catch {}
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.rate = 0.9;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      utterance.rate = 0.9;
 
-    const voices = synth.getVoices();
-    const femaleVoice = voices.find(
-      (v) =>
-        v.lang.startsWith("en") &&
-        (/female/i.test(v.name) || /samantha|karen|victoria|fiona|susan|hazel|linda|jenny|aria|moira/i.test(v.name))
-    ) || voices.find((v) => v.lang === "en-US")
-      || voices.find((v) => v.lang.startsWith("en"));
+      const voices = synth.getVoices();
+      const femaleVoice = voices.find(
+        (v) =>
+          v.lang.startsWith("en") &&
+          (/female/i.test(v.name) || /samantha|karen|victoria|fiona|susan|hazel|linda|jenny|aria|moira/i.test(v.name))
+      ) || voices.find((v) => v.lang === "en-US")
+        || voices.find((v) => v.lang.startsWith("en"));
 
-    if (femaleVoice) utterance.voice = femaleVoice;
+      if (femaleVoice) utterance.voice = femaleVoice;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
 
-    // Speak synchronously — required for both iOS and Chrome user gesture context
-    synth.speak(utterance);
+      synth.speak(utterance);
 
-    // Chrome keepalive for long texts (prevents 15s timeout)
-    if (text.length > 100) {
-      const keepAlive = setInterval(() => {
-        if (!synth.speaking) { clearInterval(keepAlive); }
-        else { synth.pause(); synth.resume(); }
-      }, 10000);
-      utterance.onend = () => { setIsSpeaking(false); clearInterval(keepAlive); };
-      utterance.onerror = () => { setIsSpeaking(false); clearInterval(keepAlive); };
+      if (text.length > 100) {
+        const keepAlive = setInterval(() => {
+          if (!synth.speaking) { clearInterval(keepAlive); }
+          else { synth.pause(); synth.resume(); }
+        }, 10000);
+        utterance.onend = () => { setIsSpeaking(false); clearInterval(keepAlive); };
+        utterance.onerror = () => { setIsSpeaking(false); clearInterval(keepAlive); };
+      }
+    } else {
+      // Desktop: use server TTS via /api/tts
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+
+      // Split long text into chunks (Google TTS ~200 char limit)
+      const parts = text.match(/[^.!?]+[.!?]*/g) || [text];
+      const chunks: string[] = [];
+      let current = "";
+      for (const part of parts) {
+        if ((current + part).length > 180) {
+          if (current) chunks.push(current.trim());
+          current = part;
+        } else {
+          current += part;
+        }
+      }
+      if (current.trim()) chunks.push(current.trim());
+
+      let index = 0;
+      setIsSpeaking(true);
+
+      const playNext = () => {
+        if (index >= chunks.length) {
+          audioRef.current = null;
+          setIsSpeaking(false);
+          return;
+        }
+        const audio = new Audio(`/api/tts?text=${encodeURIComponent(chunks[index])}`);
+        audio.playbackRate = 0.9;
+        audioRef.current = audio;
+        audio.onended = () => { index++; playNext(); };
+        audio.onerror = () => { index++; playNext(); };
+        audio.play().catch(() => { setIsSpeaking(false); });
+      };
+
+      playNext();
     }
   }, []);
 
   const stopSpeaking = useCallback(() => {
-    window.speechSynthesis?.cancel();
+    if (isIOS()) {
+      window.speechSynthesis?.cancel();
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      stopServerTTS();
+    }
     setIsSpeaking(false);
   }, []);
 

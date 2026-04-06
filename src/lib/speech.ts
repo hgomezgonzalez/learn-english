@@ -1,9 +1,12 @@
 // Speech helper — compatible with iOS Safari, Chrome, Edge, Firefox
-// iOS requires speak() to be called synchronously from a user gesture.
-// No setTimeout between tap and speak().
+// iOS uses Web Speech API (requires synchronous speak from gesture).
+// Desktop uses server-side TTS via /api/tts for reliability.
 
 let cachedVoice: SpeechSynthesisVoice | null = null;
 let audioUnlocked = false;
+let currentAudio: HTMLAudioElement | null = null;
+
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 function getEnglishVoice(): SpeechSynthesisVoice | null {
   if (cachedVoice) return cachedVoice;
@@ -26,24 +29,21 @@ function getEnglishVoice(): SpeechSynthesisVoice | null {
 }
 
 // Must be called from a user gesture (click/tap) to unlock iOS audio.
-// On desktop Chrome, speaking an empty utterance can corrupt the synth queue.
 export function unlockAudio() {
   if (audioUnlocked) return;
   audioUnlocked = true;
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  if (!isIOS) return;
+  if (!isIOS()) return;
 
   const synth = window.speechSynthesis;
   if (!synth) return;
 
-  // iOS needs a real speak() call from a gesture to unlock
   const u = new SpeechSynthesisUtterance("");
   u.volume = 0;
   synth.speak(u);
 }
 
-// Pre-load voices
+// Pre-load voices (for iOS Web Speech API)
 export function initVoices(): Promise<void> {
   return new Promise((resolve) => {
     const synth = window.speechSynthesis;
@@ -66,7 +66,60 @@ export function initVoices(): Promise<void> {
   });
 }
 
-function doSpeak(text: string, rate: number) {
+// --- Desktop TTS via server endpoint ---
+
+function splitSentences(text: string): string[] {
+  const parts = text.match(/[^.!?]+[.!?]*/g) || [text];
+  const chunks: string[] = [];
+  let current = "";
+  for (const part of parts) {
+    if ((current + part).length > 180) {
+      if (current) chunks.push(current.trim());
+      current = part;
+    } else {
+      current += part;
+    }
+  }
+  if (current.trim()) chunks.push(current.trim());
+  return chunks;
+}
+
+function playServerTTS(text: string, rate: number) {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+
+  const chunks = splitSentences(text);
+  let index = 0;
+
+  function playNext() {
+    if (index >= chunks.length) {
+      currentAudio = null;
+      return;
+    }
+    const audio = new Audio(`/api/tts?text=${encodeURIComponent(chunks[index])}`);
+    audio.playbackRate = rate;
+    currentAudio = audio;
+    audio.onended = () => { index++; playNext(); };
+    audio.onerror = () => { index++; playNext(); };
+    audio.play().catch(() => { index++; playNext(); });
+  }
+
+  playNext();
+}
+
+// Stop any playing server TTS audio
+export function stopServerTTS() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+}
+
+// --- iOS TTS via Web Speech API ---
+
+function playWebSpeechTTS(text: string, rate: number) {
   const synth = window.speechSynthesis;
   if (!synth) return;
 
@@ -82,10 +135,8 @@ function doSpeak(text: string, rate: number) {
   const voice = getEnglishVoice();
   if (voice) utterance.voice = voice;
 
-  // Speak synchronously — required for both iOS and Chrome user gesture context
   synth.speak(utterance);
 
-  // Chrome keepalive for long texts (prevents 15s timeout)
   if (text.length > 50) {
     const keepAlive = setInterval(() => {
       if (!synth.speaking) {
@@ -100,12 +151,20 @@ function doSpeak(text: string, rate: number) {
   }
 }
 
-// Speak a word — repeats it so user catches it clearly
+// --- Public API ---
+
+function doSpeak(text: string, rate: number) {
+  if (isIOS()) {
+    playWebSpeechTTS(text, rate);
+  } else {
+    playServerTTS(text, rate);
+  }
+}
+
 export function speakWord(text: string) {
   doSpeak(`${text} ... ${text}`, 0.8);
 }
 
-// Speak a sentence
 export function speakSentence(text: string) {
   doSpeak(text, 0.9);
 }
