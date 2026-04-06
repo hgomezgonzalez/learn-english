@@ -77,8 +77,13 @@ export function useVoice({ onTranscript, lang = "en-US" }: UseVoiceOptions) {
     const synth = window.speechSynthesis;
     if (!synth) return;
 
-    synth.cancel();
-    try { synth.resume(); } catch {}
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const wasSpeaking = synth.speaking || synth.pending;
+
+    if (wasSpeaking) {
+      synth.cancel();
+      try { synth.resume(); } catch {}
+    }
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
@@ -98,17 +103,27 @@ export function useVoice({ onTranscript, lang = "en-US" }: UseVoiceOptions) {
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
 
-    // Speak synchronously — no setTimeout (required for iOS)
-    synth.speak(utterance);
+    const setupKeepAlive = () => {
+      if (text.length > 100) {
+        const keepAlive = setInterval(() => {
+          if (!synth.speaking) { clearInterval(keepAlive); }
+          else { synth.pause(); synth.resume(); }
+        }, 10000);
+        utterance.onend = () => { setIsSpeaking(false); clearInterval(keepAlive); };
+        utterance.onerror = () => { setIsSpeaking(false); clearInterval(keepAlive); };
+      }
+    };
 
-    // Chrome keepalive for long texts
-    if (text.length > 100) {
-      const keepAlive = setInterval(() => {
-        if (!synth.speaking) { clearInterval(keepAlive); }
-        else { synth.pause(); synth.resume(); }
-      }, 10000);
-      utterance.onend = () => { setIsSpeaking(false); clearInterval(keepAlive); };
-      utterance.onerror = () => { setIsSpeaking(false); clearInterval(keepAlive); };
+    // iOS requires synchronous speak from gesture — no delay allowed
+    // Chrome desktop needs a brief delay after cancel() or speak is silently dropped
+    if (!isIOS && wasSpeaking) {
+      setTimeout(() => {
+        synth.speak(utterance);
+        setupKeepAlive();
+      }, 80);
+    } else {
+      synth.speak(utterance);
+      setupKeepAlive();
     }
   }, []);
 
