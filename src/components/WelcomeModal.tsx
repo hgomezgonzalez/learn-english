@@ -7,6 +7,7 @@ interface WelcomeModalProps {
   onClose: () => void;
   onQuiz: () => void;
   onListening: () => void;
+  onVideos: () => void;
   onSearch: (word: string) => void;
   onLogout: () => void;
   level: { name: string; emoji: string };
@@ -16,7 +17,7 @@ interface WelcomeModalProps {
 }
 
 export function WelcomeModal({
-  isOpen, onClose, onQuiz, onListening, onSearch, onLogout,
+  isOpen, onClose, onQuiz, onListening, onVideos, onSearch, onLogout,
   level, todayXp, streak, version,
 }: WelcomeModalProps) {
   const [searchWord, setSearchWord] = useState("");
@@ -86,10 +87,10 @@ export function WelcomeModal({
               <span className="text-2xl">🎧</span>
               <span className="text-[11px] font-bold text-[#6c5ce7]">Listening</span>
             </button>
-            <button type="button" onClick={onClose}
-              className="flex flex-col items-center gap-1.5 bg-zinc-50 dark:bg-zinc-800 rounded-xl px-3 py-3.5 hover:bg-blue-50 transition-colors active:scale-95">
-              <span className="text-2xl">📝</span>
-              <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">Conjugation</span>
+            <button type="button" onClick={onVideos}
+              className="flex flex-col items-center gap-1.5 bg-gradient-to-br from-[#e74c3c]/10 to-[#ff7675]/5 dark:from-[#e74c3c]/20 dark:to-transparent rounded-xl px-3 py-3.5 hover:from-[#e74c3c]/20 transition-colors active:scale-95 ring-1 ring-[#e74c3c]/20">
+              <span className="text-2xl">📺</span>
+              <span className="text-[11px] font-bold text-[#e74c3c]">Videos</span>
             </button>
           </div>
 

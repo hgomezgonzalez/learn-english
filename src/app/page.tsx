@@ -13,6 +13,7 @@ import { WordSearch } from "@/components/WordSearch";
 import { ScoreBoard } from "@/components/ScoreBoard";
 import { VocabQuiz } from "@/components/VocabQuiz";
 import { ListeningQuiz } from "@/components/ListeningQuiz";
+import { VideosLibrary } from "@/components/VideosLibrary";
 import type { VerbConjugation } from "@/types";
 import { initVoices, unlockAudio } from "@/lib/speech";
 import { useProgress } from "@/hooks/useProgress";
@@ -28,6 +29,7 @@ export default function Home() {
   const [wordConjugation, setWordConjugation] = useState<VerbConjugation | null>(null);
   const [quizOpen, setQuizOpen] = useState(false);
   const [listeningQuizOpen, setListeningQuizOpen] = useState(false);
+  const [videosOpen, setVideosOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [wordModalOpen, setWordModalOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(true);
@@ -97,14 +99,18 @@ export default function Home() {
 
         <Avatar state={effectiveAvatarState} />
 
-        <div className="w-full flex gap-2">
+        <div className="w-full grid grid-cols-3 gap-2">
           <button type="button" onClick={() => setQuizOpen(true)}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#00b894] to-[#00a383] text-white font-bold text-xs hover:shadow-lg transition-all flex items-center justify-center gap-1">
+            className="py-3 rounded-xl bg-gradient-to-r from-[#00b894] to-[#00a383] text-white font-bold text-xs hover:shadow-lg transition-all flex items-center justify-center gap-1">
             🎯 Quiz
           </button>
           <button type="button" onClick={() => setListeningQuizOpen(true)}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-bold text-xs hover:shadow-lg transition-all flex items-center justify-center gap-1">
+            className="py-3 rounded-xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-bold text-xs hover:shadow-lg transition-all flex items-center justify-center gap-1">
             🎧 Listening
+          </button>
+          <button type="button" onClick={() => setVideosOpen(true)}
+            className="py-3 rounded-xl bg-gradient-to-r from-[#e74c3c] to-[#ff7675] text-white font-bold text-xs hover:shadow-lg transition-all flex items-center justify-center gap-1">
+            📺 Videos
           </button>
         </div>
 
@@ -150,6 +156,10 @@ export default function Home() {
             <button type="button" onClick={() => setListeningQuizOpen(true)}
               className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#6c5ce7] text-white text-base active:scale-90">
               🎧
+            </button>
+            <button type="button" onClick={() => setVideosOpen(true)}
+              className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#e74c3c] text-white text-base active:scale-90">
+              📺
             </button>
             <button type="button" onClick={() => setMenuOpen(true)}
               className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/15 text-white">
@@ -224,6 +234,11 @@ export default function Home() {
               <span className="text-2xl">🎧</span>
               <div className="text-left"><p className="text-sm">Listening Quiz</p><p className="text-[10px] text-white/60">Listen & write</p></div>
             </button>
+            <button type="button" onClick={() => { setVideosOpen(true); setMenuOpen(false); }}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#e74c3c] to-[#ff7675] text-white font-bold text-sm flex items-center gap-3 px-4">
+              <span className="text-2xl">📺</span>
+              <div className="text-left"><p className="text-sm">Videos en inglés</p><p className="text-[10px] text-white/60">Watch & learn</p></div>
+            </button>
 
             {/* Tools */}
             <p className="text-[10px] font-semibold text-[#7ec8b8] uppercase tracking-widest mt-1">Tools</p>
@@ -295,6 +310,7 @@ export default function Home() {
         onClose={() => setWelcomeOpen(false)}
         onQuiz={() => { setWelcomeOpen(false); setQuizOpen(true); }}
         onListening={() => { setWelcomeOpen(false); setListeningQuizOpen(true); }}
+        onVideos={() => { setWelcomeOpen(false); setVideosOpen(true); }}
         onSearch={(w) => { setWelcomeOpen(false); handleWordClick(w); }}
         onLogout={logout}
         level={progress.level}
@@ -306,6 +322,17 @@ export default function Home() {
       {/* Quiz Modals */}
       <VocabQuiz isOpen={quizOpen} onClose={() => setQuizOpen(false)} onComplete={(xp) => progress.addXp(xp, "quiz")} />
       <ListeningQuiz isOpen={listeningQuizOpen} onClose={() => setListeningQuizOpen(false)} onComplete={(xp) => progress.addXp(xp, "quiz")} />
+
+      {/* Videos Library */}
+      <VideosLibrary
+        isOpen={videosOpen}
+        onClose={() => setVideosOpen(false)}
+        onAskTutor={(prompt) => {
+          setVideosOpen(false);
+          setTimeout(() => sendMessage(prompt), 250);
+        }}
+        onVideoWatched={() => progress.addXp(10, "word")}
+      />
     </div>
   );
 }
