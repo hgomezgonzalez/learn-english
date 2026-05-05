@@ -8,6 +8,7 @@ interface WelcomeModalProps {
   onQuiz: () => void;
   onListening: () => void;
   onVideos: () => void;
+  onBooks: () => void;
   onSearch: (word: string) => void;
   onLogout: () => void;
   level: { name: string; emoji: string };
@@ -17,7 +18,7 @@ interface WelcomeModalProps {
 }
 
 export function WelcomeModal({
-  isOpen, onClose, onQuiz, onListening, onVideos, onSearch, onLogout,
+  isOpen, onClose, onQuiz, onListening, onVideos, onBooks, onSearch, onLogout,
   level, todayXp, streak, version,
 }: WelcomeModalProps) {
   const [searchWord, setSearchWord] = useState("");
@@ -93,6 +94,17 @@ export function WelcomeModal({
               <span className="text-[11px] font-bold text-[#e74c3c]">Videos</span>
             </button>
           </div>
+
+          {/* Books — full width to highlight new section */}
+          <button type="button" onClick={onBooks}
+            className="w-full flex items-center gap-3 bg-gradient-to-r from-[#b45309] to-[#d97706] rounded-xl px-4 py-3 hover:shadow-lg transition-all active:scale-[0.98]">
+            <span className="text-2xl">📚</span>
+            <div className="text-left flex-1">
+              <p className="text-sm font-bold text-white">Books in English</p>
+              <p className="text-[10px] text-white/80">Graded readers · audiobooks</p>
+            </div>
+            <span className="text-white/80">→</span>
+          </button>
 
           {/* Search word */}
           <div className="flex gap-2">

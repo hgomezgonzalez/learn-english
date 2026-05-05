@@ -14,6 +14,7 @@ import { ScoreBoard } from "@/components/ScoreBoard";
 import { VocabQuiz } from "@/components/VocabQuiz";
 import { ListeningQuiz } from "@/components/ListeningQuiz";
 import { VideosLibrary } from "@/components/VideosLibrary";
+import { BooksLibrary } from "@/components/BooksLibrary";
 import type { VerbConjugation } from "@/types";
 import { initVoices, unlockAudio } from "@/lib/speech";
 import { useProgress } from "@/hooks/useProgress";
@@ -30,6 +31,7 @@ export default function Home() {
   const [quizOpen, setQuizOpen] = useState(false);
   const [listeningQuizOpen, setListeningQuizOpen] = useState(false);
   const [videosOpen, setVideosOpen] = useState(false);
+  const [booksOpen, setBooksOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [wordModalOpen, setWordModalOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(true);
@@ -99,7 +101,7 @@ export default function Home() {
 
         <Avatar state={effectiveAvatarState} />
 
-        <div className="w-full grid grid-cols-3 gap-2">
+        <div className="w-full grid grid-cols-2 gap-2">
           <button type="button" onClick={() => setQuizOpen(true)}
             className="py-3 rounded-xl bg-gradient-to-r from-[#00b894] to-[#00a383] text-white font-bold text-xs hover:shadow-lg transition-all flex items-center justify-center gap-1">
             🎯 Quiz
@@ -111,6 +113,10 @@ export default function Home() {
           <button type="button" onClick={() => setVideosOpen(true)}
             className="py-3 rounded-xl bg-gradient-to-r from-[#e74c3c] to-[#ff7675] text-white font-bold text-xs hover:shadow-lg transition-all flex items-center justify-center gap-1">
             📺 Videos
+          </button>
+          <button type="button" onClick={() => setBooksOpen(true)}
+            className="py-3 rounded-xl bg-gradient-to-r from-[#b45309] to-[#d97706] text-white font-bold text-xs hover:shadow-lg transition-all flex items-center justify-center gap-1">
+            📚 Books
           </button>
         </div>
 
@@ -239,6 +245,11 @@ export default function Home() {
               <span className="text-2xl">📺</span>
               <div className="text-left"><p className="text-sm">Videos en inglés</p><p className="text-[10px] text-white/60">Watch & learn</p></div>
             </button>
+            <button type="button" onClick={() => { setBooksOpen(true); setMenuOpen(false); }}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#b45309] to-[#d97706] text-white font-bold text-sm flex items-center gap-3 px-4">
+              <span className="text-2xl">📚</span>
+              <div className="text-left"><p className="text-sm">Books in English</p><p className="text-[10px] text-white/60">Graded readers · audiobooks</p></div>
+            </button>
 
             {/* Tools */}
             <p className="text-[10px] font-semibold text-[#7ec8b8] uppercase tracking-widest mt-1">Tools</p>
@@ -311,6 +322,7 @@ export default function Home() {
         onQuiz={() => { setWelcomeOpen(false); setQuizOpen(true); }}
         onListening={() => { setWelcomeOpen(false); setListeningQuizOpen(true); }}
         onVideos={() => { setWelcomeOpen(false); setVideosOpen(true); }}
+        onBooks={() => { setWelcomeOpen(false); setBooksOpen(true); }}
         onSearch={(w) => { setWelcomeOpen(false); handleWordClick(w); }}
         onLogout={logout}
         level={progress.level}
@@ -332,6 +344,17 @@ export default function Home() {
           setTimeout(() => sendMessage(prompt), 250);
         }}
         onVideoWatched={() => progress.addXp(10, "word")}
+      />
+
+      {/* Books Library */}
+      <BooksLibrary
+        isOpen={booksOpen}
+        onClose={() => setBooksOpen(false)}
+        onAskTutor={(prompt) => {
+          setBooksOpen(false);
+          setTimeout(() => sendMessage(prompt), 250);
+        }}
+        onBookRead={() => progress.addXp(15, "word")}
       />
     </div>
   );
